@@ -112,7 +112,7 @@ func TestToSqlInsert(t *testing.T) {
 		{"a", "b", "c"},
 	}
 
-	sql, args, err := ToSql(Expr(sq), v)
+	sql, args, err := ToSql(sq, v)
 
 	assert.NoError(t, err)
 	assert.Equal(t, sql, " INSERT INTO (name, city, country)  VALUES (?,?,?)")
@@ -128,7 +128,7 @@ func TestToSqlInsertMultiple(t *testing.T) {
 		{"aaa", "bbb", "ccc"},
 	}
 
-	sql, args, err := ToSql(Expr(sq), data)
+	sql, args, err := ToSql(sq, data)
 
 	assert.NoError(t, err)
 	assert.Equal(t, sql, " INSERT INTO (name, city, country)  VALUES (?,?,?),(?,?,?),(?,?,?)")
