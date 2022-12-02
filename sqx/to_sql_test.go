@@ -134,3 +134,45 @@ func TestToSqlInsertMultiple(t *testing.T) {
 	assert.Equal(t, sql, " INSERT INTO (name, city, country)  VALUES (?,?,?),(?,?,?),(?,?,?)")
 	assert.Equal(t, args, []interface{}{"a", "b", "c", "aa", "bb", "cc", "aaa", "bbb", "ccc"})
 }
+
+func TestToSqlMultiUnion(t *testing.T) {
+
+	sqUnion := []interface{}{
+		`SELECT tb_a.name FROM tb_a JOIN tb_a ON tb_a.id = o.id`,
+		Where{
+			Eq{"tb_o.id": nil, "tb_o.uid": 1},
+		},
+		`GROUP BY tb_o.fid`,
+
+		// 1nd union
+		`
+		UNION ALL
+		`,
+		`SELECT tb_a.name FROM tb_a JOIN tb_o ON tb_o.fid = tb_a.fid`,
+		Where{
+			Eq{"tb_o.fid": nil, "tb_o.uid": 1},
+		},
+		`GROUP BY tb_o.fid`,
+
+		// 2nd UNION
+		`
+		UNION ALL
+		`,
+		`SELECT tb_a.name FROM tb_o JOIN tb_a ON tb_a.id = tb_o.id AND tb_a.fid =tb_o.fid`,
+		Where{
+			Eq{"tb_o.uid": 1},
+		},
+		`GROUP BY tb_o.fd`,
+	}
+
+	sql, args, err := ToSql(sqUnion...)
+
+	assert.NoError(t, err)
+	assert.Equal(t, sql,
+		` SELECT tb_a.name FROM tb_a JOIN tb_a ON tb_a.id = o.id  WHERE tb_o.id IS NULL AND tb_o.uid = ?  GROUP BY tb_o.fid 
+		UNION ALL
+		 SELECT tb_a.name FROM tb_a JOIN tb_o ON tb_o.fid = tb_a.fid  WHERE tb_o.fid IS NULL AND tb_o.uid = ?  GROUP BY tb_o.fid 
+		UNION ALL
+		 SELECT tb_a.name FROM tb_o JOIN tb_a ON tb_a.id = tb_o.id AND tb_a.fid =tb_o.fid  WHERE tb_o.uid = ?  GROUP BY tb_o.fd`)
+	assert.Equal(t, args, []interface{}{1, 1, 1})
+}
