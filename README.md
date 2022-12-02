@@ -47,11 +47,11 @@ sq := `SELECT * FROM tb_a
 
     // Ordered combined statement
 	sql, args, err := ToSql(
-		Expr(sq), // simple string need to be cast with Expr type
+		sq, 
 		whereConj,
 		havingConj,
-		Expr(sqOrderBy), // simple string need to be cast with Expr type
-		Expr(sqGroupBy), // simple string need to be cast with Expr type
+		sqOrderBy, 
+		sqGroupBy, 
 	)
 
 	assert.Equal(t, sql, 

@@ -1,9 +1,8 @@
 package sqx
 
 import (
-	"testing"
-
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestToSql(t *testing.T) {
@@ -31,12 +30,12 @@ func TestToSql(t *testing.T) {
 	sqOrderBy := " ORDER BY tb_a.asdfa ASC "
 
 	sql, args, err := ToSql(
-		Expr(sq), // simple string need to be cast with Expr type
+		sq,
 		eq,
 		notEq,
 		like,
 		lt,
-		Expr(sqOrderBy), // simple string need to be cast with Expr type
+		sqOrderBy,
 	)
 	assert.NoError(t, err)
 	assert.Equal(t, sql, ` SELECT * FROM tb_a 
@@ -79,11 +78,11 @@ func TestToSqlWithConj(t *testing.T) {
 	sqGroupBy := "GROUP BY tb_a.id"
 
 	sql, args, err := ToSql(
-		Expr(sq), // simple string need to be cast with Expr type
+		sq,
 		whereConj,
 		havingConj,
-		Expr(sqOrderBy), // simple string need to be cast with Expr type
-		Expr(sqGroupBy), // simple string need to be cast with Expr type
+		sqOrderBy,
+		sqGroupBy,
 	)
 
 	assert.NoError(t, err)
@@ -100,8 +99,7 @@ func TestToSqlUpdate(t *testing.T) {
 		"tb_a.col":  1,
 	}
 
-	sql, args, err := ToSql(Expr(sq), eq)
-
+	sql, args, err := ToSql(sq, eq)
 	assert.NoError(t, err)
 	assert.Equal(t, sql, " UPDATE tb_a SET  tb_a.col = ? AND tb_a.name = ?")
 	assert.Equal(t, args, []interface{}{1, "kambing"})

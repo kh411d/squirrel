@@ -5,8 +5,21 @@ import (
 	"io"
 )
 
-func ToSql(parts ...Sqlizer) (sqlStr string, args []interface{}, err error) {
-	return toSql("", parts...)
+func ToSql(parts ...interface{}) (sqlStr string, args []interface{}, err error) {
+
+	return toSql("", sqlizerd(parts)...)
+}
+
+func sqlizerd(parts []interface{}) (s []Sqlizer) {
+	for _, v := range parts {
+		switch v.(type) {
+		case string:
+			s = append(s, Expr(v.(string)))
+		case Sqlizer:
+			s = append(s, v.(Sqlizer))
+		}
+	}
+	return
 }
 
 // ToSql wrapper to build sql query, if "sep" or separator is given then each parts going to be separated by the "sep" string
