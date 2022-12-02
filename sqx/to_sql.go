@@ -12,11 +12,11 @@ func ToSql(parts ...interface{}) (sqlStr string, args []interface{}, err error) 
 
 func sqlizerd(parts []interface{}) (s []Sqlizer) {
 	for _, v := range parts {
-		switch v.(type) {
+		switch v := v.(type) {
 		case string:
-			s = append(s, Expr(v.(string)))
+			s = append(s, Expr(v))
 		case Sqlizer:
-			s = append(s, v.(Sqlizer))
+			s = append(s, v)
 		}
 	}
 	return
