@@ -5,13 +5,8 @@ import "github.com/kh411d/squirrel/sqx"
 
 ```
 
-
-[![GoDoc](https://godoc.org/github.com/Masterminds/squirrel?status.png)](https://godoc.org/github.com/Masterminds/squirrel)
-[![Build Status](https://api.travis-ci.org/Masterminds/squirrel.svg?branch=master)](https://travis-ci.org/Masterminds/squirrel)
-
-**Squirrel is not an ORM.** For an application of Squirrel, check out
-[structable, a table-struct mapper](https://github.com/Masterminds/structable)
-
+**This is a simplified version of Squirrel.** For full implementation, check out
+[Masterminds/squirrel](https://github.com/Masterminds/squirrel)
 
 Squirrel helps you build SQL queries from composable parts:
 
