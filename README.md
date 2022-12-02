@@ -77,7 +77,7 @@ import "github.com/kh411d/squirrel/sqx"
 
     // Ordered combined statement   
 	sql, args, err := sqx.ToSql(
-        Expr(sq), 
+        sq, 
         v,
     )
 
@@ -100,7 +100,7 @@ import "github.com/kh411d/squirrel/sqx"
 
     // Ordered combined statement
 	sql, args, err := sqx.ToSql(
-        Expr(sq), 
+        sq, 
         data,
     )
 
