@@ -1,4 +1,4 @@
-package squirrel
+package sqx
 
 import (
 	"strings"

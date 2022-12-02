@@ -1,4 +1,4 @@
-package squirrel
+package sqx
 
 import (
 	"bytes"
@@ -12,10 +12,6 @@ import (
 // placeholder with a (possibly different) SQL placeholder.
 type PlaceholderFormat interface {
 	ReplacePlaceholders(sql string) (string, error)
-}
-
-type placeholderDebugger interface {
-	debugPlaceholder() string
 }
 
 var (
@@ -42,18 +38,10 @@ func (questionFormat) ReplacePlaceholders(sql string) (string, error) {
 	return sql, nil
 }
 
-func (questionFormat) debugPlaceholder() string {
-	return "?"
-}
-
 type dollarFormat struct{}
 
 func (dollarFormat) ReplacePlaceholders(sql string) (string, error) {
 	return replacePositionalPlaceholders(sql, "$")
-}
-
-func (dollarFormat) debugPlaceholder() string {
-	return "$"
 }
 
 type colonFormat struct{}
@@ -62,18 +50,10 @@ func (colonFormat) ReplacePlaceholders(sql string) (string, error) {
 	return replacePositionalPlaceholders(sql, ":")
 }
 
-func (colonFormat) debugPlaceholder() string {
-	return ":"
-}
-
 type atpFormat struct{}
 
 func (atpFormat) ReplacePlaceholders(sql string) (string, error) {
 	return replacePositionalPlaceholders(sql, "@p")
-}
-
-func (atpFormat) debugPlaceholder() string {
-	return "@p"
 }
 
 // Placeholders returns a string with count ? placeholders joined with commas.

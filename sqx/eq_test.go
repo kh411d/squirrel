@@ -1,4 +1,4 @@
-package squirrel
+package sqx
 
 import (
 	"database/sql"
@@ -7,23 +7,30 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestConcatExpr(t *testing.T) {
-	b := ConcatExpr("COALESCE(name,", Expr("CONCAT(?,' ',?)", "f", "l"), ")")
-	sql, args, err := b.ToSql()
-	assert.NoError(t, err)
+func TestEqEmpty(t *testing.T) {
+	//Use empty value, "", 0, and nil
+	x := Eq{"a": "", "b": 0, "c": nil}
 
-	expectedSql := "COALESCE(name,CONCAT(?,' ',?))"
-	assert.Equal(t, expectedSql, sql)
+	//Let empty value as 0, "", or nil get parsed
+	s, args, err := x.ToSql()
+	if err != nil {
+		t.Error(err)
+	}
 
-	expectedArgs := []interface{}{"f", "l"}
-	assert.Equal(t, expectedArgs, args)
-}
+	assert.Equal(t, s, "a = ? AND b = ? AND c IS NULL")
+	assert.Equal(t, args, []interface{}{"", 0})
 
-func TestConcatExprBadType(t *testing.T) {
-	b := ConcatExpr("prefix", 123, "suffix")
-	_, _, err := b.ToSql()
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "123 is not")
+	//Now don't let any empty value 0, "", or nil get pass
+	NoEmptyValue(x)
+
+	s, args, err = x.ToSql()
+	if err != nil {
+		t.Error(err)
+	}
+
+	assert.Equal(t, s, "(1=1)")
+	assert.Equal(t, args, []interface{}([]interface{}(nil)))
+
 }
 
 func TestEqToSql(t *testing.T) {
@@ -116,54 +123,6 @@ func TestEqBytesToSql(t *testing.T) {
 	assert.Equal(t, expectedSql, sql)
 
 	expectedArgs := []interface{}{[]byte("test")}
-	assert.Equal(t, expectedArgs, args)
-}
-
-func TestLtToSql(t *testing.T) {
-	b := Lt{"id": 1}
-	sql, args, err := b.ToSql()
-	assert.NoError(t, err)
-
-	expectedSql := "id < ?"
-	assert.Equal(t, expectedSql, sql)
-
-	expectedArgs := []interface{}{1}
-	assert.Equal(t, expectedArgs, args)
-}
-
-func TestLtOrEqToSql(t *testing.T) {
-	b := LtOrEq{"id": 1}
-	sql, args, err := b.ToSql()
-	assert.NoError(t, err)
-
-	expectedSql := "id <= ?"
-	assert.Equal(t, expectedSql, sql)
-
-	expectedArgs := []interface{}{1}
-	assert.Equal(t, expectedArgs, args)
-}
-
-func TestGtToSql(t *testing.T) {
-	b := Gt{"id": 1}
-	sql, args, err := b.ToSql()
-	assert.NoError(t, err)
-
-	expectedSql := "id > ?"
-	assert.Equal(t, expectedSql, sql)
-
-	expectedArgs := []interface{}{1}
-	assert.Equal(t, expectedArgs, args)
-}
-
-func TestGtOrEqToSql(t *testing.T) {
-	b := GtOrEq{"id": 1}
-	sql, args, err := b.ToSql()
-	assert.NoError(t, err)
-
-	expectedSql := "id >= ?"
-	assert.Equal(t, expectedSql, sql)
-
-	expectedArgs := []interface{}{1}
 	assert.Equal(t, expectedArgs, args)
 }
 
@@ -315,76 +274,6 @@ func TestNotNilPointer(t *testing.T) {
 	assert.Equal(t, "id NOT IN (?,?,?)", sql)
 }
 
-func TestEmptyAndToSql(t *testing.T) {
-	sql, args, err := And{}.ToSql()
-	assert.NoError(t, err)
-
-	expectedSql := "(1=1)"
-	assert.Equal(t, expectedSql, sql)
-
-	expectedArgs := []interface{}{}
-	assert.Equal(t, expectedArgs, args)
-}
-
-func TestEmptyOrToSql(t *testing.T) {
-	sql, args, err := Or{}.ToSql()
-	assert.NoError(t, err)
-
-	expectedSql := "(1=0)"
-	assert.Equal(t, expectedSql, sql)
-
-	expectedArgs := []interface{}{}
-	assert.Equal(t, expectedArgs, args)
-}
-
-func TestLikeToSql(t *testing.T) {
-	b := Like{"name": "%irrel"}
-	sql, args, err := b.ToSql()
-	assert.NoError(t, err)
-
-	expectedSql := "name LIKE ?"
-	assert.Equal(t, expectedSql, sql)
-
-	expectedArgs := []interface{}{"%irrel"}
-	assert.Equal(t, expectedArgs, args)
-}
-
-func TestNotLikeToSql(t *testing.T) {
-	b := NotLike{"name": "%irrel"}
-	sql, args, err := b.ToSql()
-	assert.NoError(t, err)
-
-	expectedSql := "name NOT LIKE ?"
-	assert.Equal(t, expectedSql, sql)
-
-	expectedArgs := []interface{}{"%irrel"}
-	assert.Equal(t, expectedArgs, args)
-}
-
-func TestILikeToSql(t *testing.T) {
-	b := ILike{"name": "sq%"}
-	sql, args, err := b.ToSql()
-	assert.NoError(t, err)
-
-	expectedSql := "name ILIKE ?"
-	assert.Equal(t, expectedSql, sql)
-
-	expectedArgs := []interface{}{"sq%"}
-	assert.Equal(t, expectedArgs, args)
-}
-
-func TestNotILikeToSql(t *testing.T) {
-	b := NotILike{"name": "sq%"}
-	sql, args, err := b.ToSql()
-	assert.NoError(t, err)
-
-	expectedSql := "name NOT ILIKE ?"
-	assert.Equal(t, expectedSql, sql)
-
-	expectedArgs := []interface{}{"sq%"}
-	assert.Equal(t, expectedArgs, args)
-}
-
 func TestSqlEqOrder(t *testing.T) {
 	b := Eq{"a": 1, "b": 2, "c": 3}
 	sql, args, err := b.ToSql()
@@ -395,70 +284,4 @@ func TestSqlEqOrder(t *testing.T) {
 
 	expectedArgs := []interface{}{1, 2, 3}
 	assert.Equal(t, expectedArgs, args)
-}
-
-func TestSqlLtOrder(t *testing.T) {
-	b := Lt{"a": 1, "b": 2, "c": 3}
-	sql, args, err := b.ToSql()
-	assert.NoError(t, err)
-
-	expectedSql := "a < ? AND b < ? AND c < ?"
-	assert.Equal(t, expectedSql, sql)
-
-	expectedArgs := []interface{}{1, 2, 3}
-	assert.Equal(t, expectedArgs, args)
-}
-
-func TestExprEscaped(t *testing.T) {
-	b := Expr("count(??)", Expr("x"))
-	sql, args, err := b.ToSql()
-	assert.NoError(t, err)
-
-	expectedSql := "count(??)"
-	assert.Equal(t, expectedSql, sql)
-
-	expectedArgs := []interface{}{Expr("x")}
-	assert.Equal(t, expectedArgs, args)
-}
-
-func TestExprRecursion(t *testing.T) {
-	{
-		b := Expr("count(?)", Expr("nullif(a,?)", "b"))
-		sql, args, err := b.ToSql()
-		assert.NoError(t, err)
-
-		expectedSql := "count(nullif(a,?))"
-		assert.Equal(t, expectedSql, sql)
-
-		expectedArgs := []interface{}{"b"}
-		assert.Equal(t, expectedArgs, args)
-	}
-	{
-		b := Expr("extract(? from ?)", Expr("epoch"), "2001-02-03")
-		sql, args, err := b.ToSql()
-		assert.NoError(t, err)
-
-		expectedSql := "extract(epoch from ?)"
-		assert.Equal(t, expectedSql, sql)
-
-		expectedArgs := []interface{}{"2001-02-03"}
-		assert.Equal(t, expectedArgs, args)
-	}
-	{
-		b := Expr("JOIN t1 ON ?", And{Eq{"id": 1}, Expr("NOT c1"), Expr("? @@ ?", "x", "y")})
-		sql, args, err := b.ToSql()
-		assert.NoError(t, err)
-
-		expectedSql := "JOIN t1 ON (id = ? AND NOT c1 AND ? @@ ?)"
-		assert.Equal(t, expectedSql, sql)
-
-		expectedArgs := []interface{}{1, "x", "y"}
-		assert.Equal(t, expectedArgs, args)
-	}
-}
-
-func ExampleEq() {
-	Select("id", "created", "first_name").From("users").Where(Eq{
-		"company": 20,
-	})
 }
