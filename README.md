@@ -12,27 +12,27 @@ Squirrel helps you build SQL queries from composable parts:
 
 ## Select clause
 ```go
-import sq "github.com/kh411d/squirrel/sqx"
+import "github.com/kh411d/squirrel/sqx"
 
 sq := `SELECT * FROM tb_a 
 	INNER JOIN tb_b ON tb_a = tb_b `
 
-	eq := Eq{
+	eq := sqx.Eq{
 		"tb_a.asdf": 3,
 		"tb_b.qwer": 2,
 	}
 
-	notEq := NotEq{
+	notEq := sqx.NotEq{
 		"tb_b.wer": "23423",
 	}
 
-	like := Like{
+	like := sqx.Like{
 		"tb_a.rer": "%asdf",
 	}
 
-	whereConj := Where{eq, notEq, like}
+	whereConj := sqx.Where{eq, notEq, like}
 
-	havingConj := Having{
+	havingConj := sqx.Having{
 		Lt{
 			"tb_b.nsk": 32,
 		},
@@ -46,7 +46,7 @@ sq := `SELECT * FROM tb_a
 	sqGroupBy := "GROUP BY tb_a.id"
 
     // Ordered combined statement
-	sql, args, err := ToSql(
+	sql, args, err := sqx.ToSql(
 		sq, 
 		whereConj,
 		havingConj,
@@ -66,7 +66,7 @@ sq := `SELECT * FROM tb_a
 ## Insert statement
 
 ```go
-import sq "github.com/kh411d/squirrel/sqx"
+import "github.com/kh411d/squirrel/sqx"
 
 // Single value
 	sq := `INSERT INTO (name, city, country) `
@@ -76,7 +76,7 @@ import sq "github.com/kh411d/squirrel/sqx"
 	}
 
     // Ordered combined statement   
-	sql, args, err := ToSql(
+	sql, args, err := sqx.ToSql(
         Expr(sq), 
         v,
     )
@@ -92,14 +92,14 @@ import sq "github.com/kh411d/squirrel/sqx"
 // Multiple insert
 	sq := `INSERT INTO (name, city, country) `
 
-	data := Values{
+	data := sqx.Values{
 		{"a", "b", "c"},
 		{"aa", "bb", "cc"},
 		{"aaa", "bbb", "ccc"},
 	}
 
     // Ordered combined statement
-	sql, args, err := ToSql(
+	sql, args, err := sqx.ToSql(
         Expr(sq), 
         data,
     )
