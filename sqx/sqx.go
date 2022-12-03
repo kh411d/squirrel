@@ -58,49 +58,52 @@ func isStringType(val interface{}) (ok bool) {
 	return ok
 }
 
-type skipperFn func(interface{}) bool
+type validFn func() (interface{}, bool)
 
-// allow any number including zero 0
-var SKIP_NUMBER skipperFn = func(val interface{}) bool { return isNumberType(val) }
-
-// allow nil value
-var SKIP_NIL skipperFn = func(val interface{}) bool { return val == nil }
-
-// allow any string including ""
-var SKIP_STRING skipperFn = func(val interface{}) bool { return isStringType(val) }
-
-// NoEmptyValue will exclude any empty value ("", 0, nil, ptr type, etc) from the list.
-//
-// Use skipper arguments SKIP_NUMBER, SKIP_NIL, SKIP_STRING to allow 0, nil , or empty string.
-//
-// e.g. NoEmptyValue(s, SKIP_NUMBER, SKIP_NIL)
-func NoEmptyValue(s map[string]interface{}, skipper ...skipperFn) {
-	skipFn := func(val interface{}) (ok bool) {
-		for _, fn := range skipper {
-			if fn(val) {
-				return true
-			}
-		}
-		return
+func isValidValue(val interface{}) (interface{}, bool) {
+	if fn, ok := val.(validFn); ok {
+		return fn()
 	}
+	return val, true
+}
 
-	for k, v := range s {
-		r := reflect.ValueOf(v)
-		if len(skipper) != 0 && skipFn(v) {
-			continue
-		}
+// NoEmpty the value will be skipped if it's empty.
+//
+// e.g. empty string "", zero 0, nil, nil pointer, empty array/slice.
+func NoEmpty(val interface{}) validFn {
+	return func() (interface{}, bool) {
 
+		r := reflect.ValueOf(val)
+
+		//check for pointer type
 		if r.Kind() == reflect.Ptr {
 			if r.IsNil() {
-				v = nil
-			} else {
-				v = r.Elem().Interface()
-				r = reflect.ValueOf(v)
+				return val, false
 			}
+			val = r.Elem().Interface()
+			r = reflect.ValueOf(val)
+		}
+		//check for empty array and slice
+		if (r.Kind() == reflect.Array || r.Kind() == reflect.Slice) && r.Len() == 0 {
+			return val, false
 		}
 
-		if !r.IsValid() || v == nil || r.IsZero() {
-			delete(s, k)
+		if val == nil {
+			return val, false
+		}
+
+		return val, !r.IsZero()
+	}
+}
+
+func removeInvalidValue(values map[string]interface{}) {
+	for k, v := range values {
+		origVal, ok := isValidValue(v)
+		if !ok {
+			delete(values, k)
+		} else {
+			// Set the original value
+			values[k] = origVal
 		}
 	}
 }

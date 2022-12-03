@@ -21,7 +21,7 @@ func TestEqEmpty(t *testing.T) {
 	assert.Equal(t, args, []interface{}{"", 0})
 
 	//Now don't let any empty value 0, "", or nil get pass
-	NoEmptyValue(x)
+	x = Eq{"a": NoEmpty(""), "b": NoEmpty(0), "c": NoEmpty(nil)}
 
 	s, args, err = x.ToSql()
 	if err != nil {

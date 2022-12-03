@@ -35,7 +35,10 @@ func (eq Eq) toSQL(useNotOpr bool) (sql string, args []interface{}, err error) {
 	sortedKeys := getSortedKeys(eq)
 	for _, key := range sortedKeys {
 		var expr string
-		val := eq[key]
+		val, ok := isValidValue(eq[key])
+		if !ok {
+			continue
+		}
 
 		switch v := val.(type) {
 		case driver.Valuer:
@@ -76,6 +79,12 @@ func (eq Eq) toSQL(useNotOpr bool) (sql string, args []interface{}, err error) {
 		}
 		exprs = append(exprs, expr)
 	}
+
+	if len(exprs) == 0 {
+		sql = sqlTrue
+		return
+	}
+
 	sql = strings.Join(exprs, " AND ")
 	return
 }
