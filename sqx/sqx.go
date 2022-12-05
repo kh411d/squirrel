@@ -38,49 +38,45 @@ func isListType(val interface{}) bool {
 	return valVal.Kind() == reflect.Array || valVal.Kind() == reflect.Slice
 }
 
-func isNumberType(val interface{}) bool {
-	if driver.IsValue(val) {
-		return false
-	}
-	valVal := reflect.ValueOf(val)
-	switch valVal.Kind() {
-	case reflect.Int, reflect.Int64, reflect.Float64:
-		return true
-	}
-	return false
-}
+type validFn func(skip bool) (interface{}, bool)
 
-func isStringType(val interface{}) (ok bool) {
-	if val == nil {
-		return false
-	}
-	_, ok = val.(string)
-	return ok
-}
+func isValidValue(val interface{}, skip bool) (interface{}, bool) {
 
-type validFn func() (interface{}, bool)
-
-func isValidValue(val interface{}) (interface{}, bool) {
 	if fn, ok := val.(validFn); ok {
-		return fn()
+		return fn(skip)
 	}
 	return val, true
 }
 
-// NoEmpty the value will be skipped if it's empty.
-//
-// e.g. empty string "", zero 0, nil, nil pointer, empty array/slice.
+/*
+Statement clause should void if value is empty.
+
+e.g. empty string "", zero 0, nil, nil pointer, empty array/slice.
+
+	val := ""
+	Eq{"table_a.name": val, "table_b.address":"jakarta"}
+	=> `table_a.name = "" AND table_b.address = "jakarta"`
+
+	Eq{"table_a.name": sqx.NoEmpty(val), "table_b.address":"jakarta"}
+	=> `table_b.address = "jakarta"` //table_a.name clause is skipped
+*/
 func NoEmpty(val interface{}) validFn {
-	return func() (interface{}, bool) {
+	return func(skip bool) (interface{}, bool) {
+
+		if skip {
+			// return driver value type only
+			return val, true
+		}
 
 		r := reflect.ValueOf(val)
 
 		//check for pointer type
 		if r.Kind() == reflect.Ptr {
 			if r.IsNil() {
-				return val, false
+				return nil, false
 			}
 			val = r.Elem().Interface()
+			//get the underlying value
 			r = reflect.ValueOf(val)
 		}
 		//check for empty array and slice
@@ -93,17 +89,5 @@ func NoEmpty(val interface{}) validFn {
 		}
 
 		return val, !r.IsZero()
-	}
-}
-
-func removeInvalidValue(values map[string]interface{}) {
-	for k, v := range values {
-		origVal, ok := isValidValue(v)
-		if !ok {
-			delete(values, k)
-		} else {
-			// Set the original value
-			values[k] = origVal
-		}
 	}
 }

@@ -23,6 +23,8 @@ func (lk Like) toSql(opr string) (sql string, args []interface{}, err error) {
 			}
 		}
 
+		val, _ = isValidValue(val, true)
+
 		if val == nil {
 			err = fmt.Errorf("cannot use null with like operators")
 			return

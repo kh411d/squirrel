@@ -38,6 +38,8 @@ func (lt Lt) toSql(opposite, orEq bool) (sql string, args []interface{}, err err
 			}
 		}
 
+		val, _ = isValidValue(val, true)
+
 		if val == nil {
 			err = fmt.Errorf("cannot use null with less than or greater than operators")
 			return

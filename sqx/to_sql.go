@@ -32,6 +32,8 @@ func toSql(sep string, parts ...Sqlizer) (sqlStr string, args []interface{}, err
 	}
 
 	sqlStr = sql.String()
+
+	defer logDebug(sqlStr, args, err)
 	return
 }
 

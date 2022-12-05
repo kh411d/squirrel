@@ -35,16 +35,18 @@ func (eq Eq) toSQL(useNotOpr bool) (sql string, args []interface{}, err error) {
 	sortedKeys := getSortedKeys(eq)
 	for _, key := range sortedKeys {
 		var expr string
-		val, ok := isValidValue(eq[key])
-		if !ok {
-			continue
-		}
+		val := eq[key]
 
 		switch v := val.(type) {
 		case driver.Valuer:
 			if val, err = v.Value(); err != nil {
 				return
 			}
+		}
+
+		val, ok := isValidValue(val, false)
+		if !ok {
+			continue
 		}
 
 		r := reflect.ValueOf(val)
